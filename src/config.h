@@ -1,5 +1,7 @@
 #include <kissStepper.h>
 
+#define BAUDRATE                    115200L
+
 #ifndef UNO_TEST
     // -----------------------------------------------------------------------------
     // Schrittmotoren
@@ -68,27 +70,27 @@ const driveMode_t J6_MODE =         HALF_STEP;
         // -----------------------------------------------------------------------------
     // Schrittmotoren
     // -----------------------------------------------------------------------------
-    #define J1_STEP_PIN             2
-    #define J1_DIR_PIN              1
-    #define J2_STEP_PIN             3
+    #define J1_STEP_PIN             4
+    #define J1_DIR_PIN              4
+    #define J2_STEP_PIN             4
     #define J2_DIR_PIN              4
-    #define J3_STEP_PIN             5
-    #define J3_DIR_PIN              6
-    #define J4_STEP_PIN             7
-    #define J4_DIR_PIN              8
-    #define J5_STEP_PIN             9
-    #define J5_DIR_PIN              10
-    #define J6_STEP_PIN             11
-    #define J6_DIR_PIN              12
+    #define J3_STEP_PIN             4
+    #define J3_DIR_PIN              4
+    #define J4_STEP_PIN             4
+    #define J4_DIR_PIN              4
+    #define J5_STEP_PIN             4
+    #define J5_DIR_PIN              4
+    #define J6_STEP_PIN             4
+    #define J6_DIR_PIN              4
     // -----------------------------------------------------------------------------
     // Endschalter & ESTOP
     // -----------------------------------------------------------------------------
-    #define J1_LIMIT_SWITCH_PIN     13
-    #define J2_LIMIT_SWITCH_PIN     14
-    #define J3_LIMIT_SWITCH_PIN     15
-    #define J4_LIMIT_SWITCH_PIN     16
-    #define J5_LIMIT_SWITCH_PIN     17
-    #define J6_LIMIT_SWITCH_PIN     18
+    #define J1_LIMIT_SWITCH_PIN     5
+    #define J2_LIMIT_SWITCH_PIN     5
+    #define J3_LIMIT_SWITCH_PIN     5
+    #define J4_LIMIT_SWITCH_PIN     5
+    #define J5_LIMIT_SWITCH_PIN     5
+    #define J6_LIMIT_SWITCH_PIN     5
 
-    #define EMERGENCY_STOP_PIN      19
+    #define EMERGENCY_STOP_PIN      5
 #endif

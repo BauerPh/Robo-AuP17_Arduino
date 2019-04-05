@@ -8,7 +8,9 @@
 // -----------------------------------------------------------------------------
 void setup(void) {
     // Kommunikation
-    void comSetup();
+    comSetup();
+    // RoboCtrl
+    roboCtrlSetup();
     // Init
     sendRES();
 }
@@ -17,6 +19,8 @@ void setup(void) {
 // Loop
 // -----------------------------------------------------------------------------
 void loop(void) {
-    //Kommunikation
+    // Kommunikation
     comLoop();
+    // RoboCtrl
+    roboLoop();
 }

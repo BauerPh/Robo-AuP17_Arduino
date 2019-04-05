@@ -320,7 +320,6 @@ void roboCtrlSetup() {
     _emergencystop.attach(EMERGENCY_STOP_PIN, INPUT_PULLUP);
     // Nothalt
     _emergencystop.interval(3);
-
     // Schrittmotoren initialisieren
     for (uint8_t i = 0; i < 6; i++) _stepper[i].begin();
     _stepper[0].forwardLimit = J1_POS_STEP_LIMIT;

@@ -22,7 +22,7 @@ void kissStepper::begin(uint16_t maxStepsPerSec, uint16_t accelStepsPerSecPerSec
     pos = 0;
     forwardLimit = defaultForwardLimit;
     reverseLimit = defaultReverseLimit;
-
+    
     // initial pin states
     disable();
     stop();

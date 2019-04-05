@@ -26,6 +26,8 @@ void sendLSS();
 void sendRES();
 
 // Robo Ctrl
+void roboCtrlSetup();
+void roboLoop();
 void roboMOV();
 void roboREF();
 void roboSRV();
