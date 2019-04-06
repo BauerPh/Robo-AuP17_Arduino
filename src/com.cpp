@@ -14,6 +14,12 @@ void _rcvCON() {
     sendPOS();
 }
 
+void _clearMsgData() {
+    MsgData.cnt = 0;
+    MsgData.func = "";
+    memset(MsgData.parSet, 0, sizeof(MsgData.parSet));
+}
+
 bool _parseMsg(String &msg, struct structMsgData &msgData) {
 
     msg.trim();
@@ -57,12 +63,6 @@ bool _parseMsg(String &msg, struct structMsgData &msgData) {
     tmMsg = "";
 
     return true;
-}
-
-void _clearMsgData() {
-    MsgData.cnt = 0;
-    MsgData.func = "";
-    memset(MsgData.parSet, 0, sizeof(MsgData.parSet));
 }
 
 void _rcvMsg() {
