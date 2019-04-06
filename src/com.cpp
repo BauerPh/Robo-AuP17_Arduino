@@ -79,7 +79,11 @@ void _rcvMsg() {
             MsgIn = false;
 
             //parse Msg
-            if (!_parseMsg(Msg, MsgData)) sendERR(2);
+            if (!_parseMsg(Msg, MsgData)) {
+                sendERR(2);
+                Msg = "";
+                return;
+            }
             Msg = "";
 
             //CON
