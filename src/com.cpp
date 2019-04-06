@@ -31,16 +31,16 @@ bool _parseMsg(String &msg, struct structMsgData &msgData) {
     if (msg.length() < 3) return false;
     //auszuführende Funktion / Aktion
     msgData.func = msg.substring(0, 3);
-    //'#' - Zeichen prüfen
-    if (msg[3] != '#') return true; //keine Parameter
-    String tmMsg = msg.substring(4);
+    //Prüfen ob Parameter folgen
+    if (msg.length() < 5) return true; //keine Parameter
+    String tmpMsg = msg.substring(4);
 
     uint16_t iParSet = 0;
     uint16_t iPar = 0;
     String tmpValue = "";
     //Alle Zeichen durchlaufen
-    for (uint16_t i = 0; i < tmMsg.length(); i++) {
-        char c = tmMsg[i];
+    for (uint16_t i = 0; i < tmpMsg.length(); i++) {
+        char c = tmpMsg[i];
         if (c == '#' || c == ',') {
             //Wert speichern
             msgData.parSet[iParSet][iPar] = tmpValue.toInt();
@@ -51,16 +51,16 @@ bool _parseMsg(String &msg, struct structMsgData &msgData) {
                 iPar = 0;
             } else iPar++;
         } else {
-            //Prüfen ob Zahl
-            if (c < '0' || c > '9') return false;
-            tmpValue += c;
+            //Prüfen ob Zahl (erstes Zeichen darf auch ein '-'-Zeichen sein.)
+            if ((c >= '0' && c <= '9') || (tmpValue.length() == 0 && c == '-')) tmpValue += c;
+            else return false;
         }
     }
     //Letzten Wert speichern
     msgData.parSet[iParSet][iPar] = tmpValue.toInt();
 
     msgData.cnt = iParSet + 1;
-    tmMsg = "";
+    tmpMsg = "";
 
     return true;
 }
