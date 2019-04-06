@@ -103,27 +103,27 @@ bool _roboWork() {
 void roboMOV() {
     if (MsgData.cnt > 0) {
         for (uint8_t i = 0; i < MsgData.cnt; i++) {
-            uint8_t nr = MsgData.parSet[i][0];
+            uint8_t nr = MsgData.parSet[i][0] - 1;
             int32_t target = MsgData.parSet[i][1];
             uint16_t speed = MsgData.parSet[i][2];
             uint16_t acc = MsgData.parSet[i][3];
-            _stopAcc[nr - 1] = MsgData.parSet[i][4];
+            _stopAcc[nr] = MsgData.parSet[i][4];
 
             // Referenz prüfen
-            if (!_refOkay[nr - 1]) {
+            if (!_refOkay[nr]) {
                 sendERR(3);
                 _roboFastStop();
                 return;
             }
 
             // Daten prüfen
-            if (nr > 6 || nr < 1 || speed == 0 || acc == 0 || _stopAcc[nr - 1] == 0) {
+            if (nr > 5 || speed == 0 || acc == 0 || _stopAcc[nr] == 0) {
                 sendERR(2);
                 _roboFastStop();
                 return;
             }
             // Fahrt initieren
-            _roboInitMove(_stepper[nr - 1], target, speed, acc);
+            _roboInitMove(_stepper[nr], target, speed, acc);
         }
         sendACK(); // Telegramm bestätigen
         // Achsen verfahren
@@ -138,36 +138,52 @@ void roboMOV() {
 }
 
 void roboREF() {
-    #ifdef UNO_TEST
+    #ifdef UNO_TEST // Simulation
+        // Daten prüfen
+        for (uint8_t i = 0; i < MsgData.cnt; i++) {
+            uint8_t nr = MsgData.parSet[i][0] - 1;
+            bool dir = MsgData.parSet[i][1] == 0 ? false : true;
+            uint16_t speedFast = MsgData.parSet[i][2];
+            uint16_t speedSlow = MsgData.parSet[i][3];
+            uint16_t acc = MsgData.parSet[i][4];
+            uint16_t maxStepsBack = MsgData.parSet[i][5];
+            _stopAcc[nr] = MsgData.parSet[i][6];
+            // Daten prüfen
+            if (nr > 5 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
+                sendERR(2);
+                return; // Referenzfahrt abbrechen
+            }
+        }
         sendACK();
         // Referenzfahrt abschließen
         for (uint8_t i = 0; i < MsgData.cnt; i++) {
-            uint8_t nr = MsgData.parSet[i][0];
-            _stepper[nr - 1].setPos(0);
-            _refOkay[nr - 1] = true;
+            uint8_t nr = MsgData.parSet[i][0] - 1;
+            _stepper[nr].setPos(0);
+            _refOkay[nr] = true;
         }
         sendPOS();
         sendFIN();
         return;
     #endif
+    
     bool stopRef = false;
     // Schnell auf Endschalter fahren
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
-        uint8_t nr = MsgData.parSet[i][0];
+        uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
         uint16_t speedFast = MsgData.parSet[i][2];
         uint16_t speedSlow = MsgData.parSet[i][3];
         uint16_t acc = MsgData.parSet[i][4];
         uint16_t maxStepsBack = MsgData.parSet[i][5];
-        _stopAcc[nr - 1] = MsgData.parSet[i][6];
+        _stopAcc[nr] = MsgData.parSet[i][6];
         // Daten prüfen
-        if (nr > 6 || nr < 1 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr - 1] == 0) {
+        if (nr > 5 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
             _roboFastStop();
             sendERR(2);
             return; // Referenzfahrt abbrechen
         }
         // Fahrt initieren
-        _roboInitMove(_stepper[nr - 1], dir ? _stepper[nr - 1].forwardLimit : _stepper[nr - 1].reverseLimit, speedFast, acc);
+        _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, speedFast, acc);
     }
     sendACK(); // Telegramm bestätigen
     // Endschalter schon belegt? => dann gleich "stoppen"
@@ -177,7 +193,7 @@ void roboREF() {
     while (_roboWork()) {
         if (_checkEstop()) return;	//bei Nothalt Referenzfahrt abbrechen
         stopRef |= _checkRoboStop();
-        _updateLimitSwitches();		
+        _updateLimitSwitches();
         for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) _stepper[i].stop();
     }
     if (stopRef) return; //Referenzfahrt abbrechen
@@ -187,13 +203,13 @@ void roboREF() {
 
     // vom Endschalter runterfahren
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
-        uint8_t nr = MsgData.parSet[i][0];
+        uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
         uint16_t speedFast = MsgData.parSet[i][2];
         uint16_t acc = MsgData.parSet[i][4];
         uint16_t maxStepsBack = MsgData.parSet[i][5];
         // Fahrt initieren
-        _roboInitMove(_stepper[nr - 1], !dir ? _stepper[nr - 1].getPos() + maxStepsBack : _stepper[nr - 1].getPos() - maxStepsBack, speedFast, acc);
+        _roboInitMove(_stepper[nr], !dir ? _stepper[nr].getPos() + maxStepsBack : _stepper[nr].getPos() - maxStepsBack, speedFast, acc);
     }
     // Endschalter schon frei? => dann gleich "stoppen"
     _updateLimitSwitches();
@@ -220,12 +236,12 @@ void roboREF() {
 
     // Langsam auf Endschalter fahren
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
-        uint8_t nr = MsgData.parSet[i][0];
+        uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
         uint16_t speedSlow = MsgData.parSet[i][3];
         uint16_t acc = MsgData.parSet[i][4];
         // Fahrt initieren
-        _roboInitMove(_stepper[nr - 1], dir ? _stepper[nr - 1].forwardLimit : _stepper[nr - 1].reverseLimit, speedSlow, acc);
+        _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, speedSlow, acc);
     }
     // Endschalter schon belegt? => dann gleich "stoppen"
     _updateLimitSwitches();
@@ -241,9 +257,9 @@ void roboREF() {
 
     // Referenzfahrt abschließen
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
-        uint8_t nr = MsgData.parSet[i][0];		
-        _stepper[nr - 1].setPos(0);
-        _refOkay[nr - 1] = true;
+        uint8_t nr = MsgData.parSet[i][0] - 1;
+        _stepper[nr].setPos(0);
+        _refOkay[nr] = true;
     }
     sendPOS();
     sendESS();

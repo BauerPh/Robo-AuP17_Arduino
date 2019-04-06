@@ -14,67 +14,55 @@ void _rcvCON() {
     sendPOS();
 }
 
-void _parseMsg(String &_msg, struct structMsgData &_msgData) {
+bool _parseMsg(String &msg, struct structMsgData &msgData) {
 
-    _msgData.cnt = 0;
+    msg.trim();
+    msg.toLowerCase();
 
-    _msg.trim();
-    _msg.toLowerCase();
-    
+    _clearMsgData();
+
     //Länge prüfen
-    if (_msg.length() < 3) return;
+    if (msg.length() < 3) return false;
     //auszuführende Funktion / Aktion
-    _msgData.func = _msg.substring(0, 3);
-    //Länge prüfen
-    if (_msg.length() < 4) return;
-    String tmpCommand = _msg.substring(4);
-    //Parametersatz splitten
+    msgData.func = msg.substring(0, 3);
+    //'#' - Zeichen prüfen
+    if (msg[3] != '#') return true; //keine Parameter
+    String tmMsg = msg.substring(4);
+
     uint16_t iParSet = 0;
-    uint16_t lastParSetIndex = 0;
-    while (tmpCommand.indexOf('#', lastParSetIndex) > 0) { //es gibt noch ein '#' Zeichen!
-        uint16_t ParSetIndex = tmpCommand.indexOf('#', lastParSetIndex);
-
-        String tmpParSet = tmpCommand.substring(lastParSetIndex, ParSetIndex);
-        //Parameter splitten
-        uint16_t iPar = 0;
-        uint16_t lastParIndex = 0;
-        while (tmpParSet.indexOf(',', lastParIndex) > 0) { //es gibt noch ein ',' Zeichen
-            uint16_t ParIndex = tmpParSet.indexOf(',', lastParIndex);
-            _msgData.parSet[iParSet][iPar] = tmpParSet.substring(lastParIndex, ParIndex).toInt();
-            iPar++;
-            lastParIndex = ParIndex + 1;
+    uint16_t iPar = 0;
+    String tmpValue = "";
+    //Alle Zeichen durchlaufen
+    for (uint16_t i = 0; i < tmMsg.length(); i++) {
+        char c = tmMsg[i];
+        if (c == '#' || c == ',') {
+            //Wert speichern
+            msgData.parSet[iParSet][iPar] = tmpValue.toInt();
+            tmpValue = "";
+            //Zähler anpassen
+            if (c == '#') {
+                iParSet++;
+                iPar = 0;
+            } else iPar++;
+        } else {
+            //Prüfen ob Zahl
+            if (c < '0' || c > '9') return false;
+            tmpValue += c;
         }
-        //letzten Parameter berücksichtigen
-        _msgData.parSet[iParSet][iPar] = tmpParSet.substring(lastParIndex).toInt();
-        //restliche Parameter mit 0 befüllen
-        for (uint16_t i = iPar + 1; i < 8; i++) _msgData.parSet[iParSet][i] = 0;
-
-        iParSet++;
-        lastParSetIndex = ParSetIndex + 1;
-        tmpParSet = "";
     }
+    //Letzten Wert speichern
+    msgData.parSet[iParSet][iPar] = tmpValue.toInt();
 
-    //letzten Parametersatz berücksichtigen, wenn es einen gibt!
-    if (tmpCommand.length() > 0) {
-        String tmpParSet = tmpCommand.substring(lastParSetIndex);
-        //Split parameter
-        uint16_t iPar = 0;
-        uint16_t lastParIndex = 0;
-        while (tmpParSet.indexOf(',', lastParIndex) > 0) { //es gibt noch ein ',' Zeichen
-            uint16_t ParIndex = tmpParSet.indexOf(',', lastParIndex);
-            _msgData.parSet[iParSet][iPar] = tmpParSet.substring(lastParIndex, ParIndex).toInt();
-            iPar++;
-            lastParIndex = ParIndex + 1;
-        }
-        //letzten Parameter berücksichtigen
-        _msgData.parSet[iParSet][iPar] = tmpParSet.substring(lastParIndex).toInt();
-        //restliche Parameter mit 0 befüllen
-        for (uint16_t i = iPar + 1; i < 8; i++) _msgData.parSet[iParSet][i] = 0;
+    msgData.cnt = iParSet + 1;
+    tmMsg = "";
 
-        iParSet++;
-    }
-    _msgData.cnt = iParSet;
-    tmpCommand = "";
+    return true;
+}
+
+void _clearMsgData() {
+    MsgData.cnt = 0;
+    MsgData.func = "";
+    memset(MsgData.parSet, 0, sizeof(MsgData.parSet));
 }
 
 void _rcvMsg() {
@@ -82,19 +70,16 @@ void _rcvMsg() {
     static String Msg = "";
     static bool MsgIn = false;
 
-    while (Serial.available() > 0)
-    {
+    while (Serial.available() > 0) {
         char c = Serial.read();
         if (c == '<') {
             MsgIn = true;
             Msg = "";
-        }
-        else if (c == '>')
-        {
+        } else if (c == '>') {
             MsgIn = false;
 
             //parse Msg
-            _parseMsg(Msg, MsgData);
+            if (!_parseMsg(Msg, MsgData)) sendERR(2);
             Msg = "";
 
             //CON
@@ -115,8 +100,7 @@ void _rcvMsg() {
             //NO FUNCTION
             //***************
             else sendERR(1);
-        }
-        else if (MsgIn) Msg += c;
+        } else if (MsgIn) Msg += c;
     }
 }
 
@@ -144,14 +128,12 @@ void sendPOS() {
     Serial.print(F("pos"));
     for (uint8_t i = 0; i < 6; i++) {
         Serial.printf(PSTR("#%u,%u,%d"), i+1, roboGetRefOkay(i) ? 1 : 0, roboGetStepperPos(i));
-        //Serial.print(String (F("#")) + String(i+1) + String(roboGetRefOkay(i) ? F(",1,") : F(",0,")) + String(roboGetStepperPos(i)));
     }
     _sendNewLine();
 }
 
 void sendESS() {
     Serial.printf(PSTR("ess#%u"), roboGetEstop() ? 0 : 1);
-    //Serial.print(String(F("ess#")) + String(roboGetEstop() ? F("0") : F("1")));
     _sendNewLine();
 }
 
@@ -159,7 +141,6 @@ void sendLSS() {
     Serial.print(F("lss"));
     for (uint8_t i = 0; i < 6; i++) {
         Serial.printf(PSTR("#%u,%u"), i+1, roboGetLimitSwitch(i) ? 1 : 0);
-        //Serial.print(String(F("#")) + String(i+1) + String(F(",")) + String(roboGetLimitSwitch(i) ? F("1") : F("0")));
     }
     _sendNewLine();
 }
