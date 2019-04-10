@@ -131,20 +131,26 @@ void sendERR(uint8_t errnum) {
 void sendPOS() {
     Serial.print(F("pos"));
     for (uint8_t i = 0; i < 6; i++) {
-        Serial.printf(PSTR("#%u,%u,%d"), i+1, roboGetRefOkay(i) ? 1 : 0, roboGetStepperPos(i));
+        char buffer[16];
+        sprintf(buffer, PSTR("#%u,%u,%d"), i+1, roboGetRefOkay(i) ? 1 : 0, roboGetStepperPos(i));
+        Serial.print (buffer);
     }
     _sendNewLine();
 }
 
 void sendESS() {
-    Serial.printf(PSTR("ess#%u"), roboGetEstop() ? 0 : 1);
+    char buffer[8];
+    sprintf(buffer, PSTR("ess#%u"), roboGetEstop() ? 0 : 1);
+    Serial.print (buffer);
     _sendNewLine();
 }
 
 void sendLSS() {
     Serial.print(F("lss"));
     for (uint8_t i = 0; i < 6; i++) {
-        Serial.printf(PSTR("#%u,%u"), i+1, roboGetLimitSwitch(i) ? 1 : 0);
+        char buffer[8];
+        sprintf(buffer, PSTR("#%u,%u"), i+1, roboGetLimitSwitch(i) ? 1 : 0);
+        Serial.print (buffer);
     }
     _sendNewLine();
 }
