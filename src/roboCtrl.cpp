@@ -196,7 +196,10 @@ void roboREF() {
         _updateLimitSwitches();
         for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) _stepper[i].stop();
     }
-    if (stopRef) return; //Referenzfahrt abbrechen
+    if (stopRef) {
+        sendERR(4);
+        return; //Referenzfahrt abbrechen
+    }
 
     // 500ms Warten
     delay(500);
@@ -221,7 +224,10 @@ void roboREF() {
         _updateLimitSwitches();
         for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].fell()) _stepper[i].decelerate();
     }
-    if (stopRef) return; //Referenzfahrt abbrechen
+    if (stopRef) {
+        sendERR(4);
+        return; //Referenzfahrt abbrechen
+    }
     //Wurden Endschalter wirklich verlassen?
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0];
@@ -253,7 +259,10 @@ void roboREF() {
         _updateLimitSwitches();
         for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) _stepper[i].stop();
     }
-    if (stopRef) return; //Referenzfahrt abbrechen
+    if (stopRef) {
+        sendERR(4);
+        return; //Referenzfahrt abbrechen
+    }
 
     // Referenzfahrt abschließen
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
