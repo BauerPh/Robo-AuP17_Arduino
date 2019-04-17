@@ -12,6 +12,9 @@ void _rcvCON() {
     sendESS();
     sendLSS();
     sendPOS();
+#ifndef UNO_TEST
+    sendSRV();
+#endif
 }
 
 void _clearMsgData() {
@@ -137,6 +140,26 @@ void sendPOS() {
     }
     _sendNewLine();
 }
+
+#ifndef UNO_TEST
+void sendSRV() {
+    Serial.print(F("srv"));
+    for (uint8_t i = 0; i < 3; i++) {
+        char buffer[16];
+        sprintf_P(buffer, PSTR("#%u,%d"), i+1, roboGetServoPos(i));
+        Serial.print (buffer);
+    }
+    _sendNewLine();
+}
+#else
+void sendSRV(int32_t nr, int32_t val) {
+    Serial.print(F("srv"));
+    char buffer[16];
+    sprintf_P(buffer, PSTR("#%u,%d"), nr, val);
+    Serial.print (buffer);
+    _sendNewLine();
+}
+#endif
 
 void sendESS() {
     char buffer[8];

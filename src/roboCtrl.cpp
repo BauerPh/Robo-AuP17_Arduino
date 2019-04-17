@@ -284,6 +284,11 @@ void roboSRV() {
         _servos[MsgData.parSet[0][0] - 1].write(MsgData.parSet[0][1]);
     #endif
     sendACK();
+    #ifndef UNO_TEST
+    sendSRV();
+    #else
+    sendSRV(MsgData.parSet[0][0], MsgData.parSet[0][1]);
+    #endif
     sendFIN();
 }
 
@@ -304,6 +309,12 @@ bool roboGetRefOkay(int i) {
 
 int32_t roboGetStepperPos(int i) {
     return _stepper[i].getPos();
+}
+
+int roboGetServoPos(int i) {
+    #ifndef UNO_TEST
+        return _servos[i].read();
+    #endif
 }
 
 bool roboGetEstop() {

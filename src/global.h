@@ -21,6 +21,11 @@ void sendACK();
 void sendFIN();
 void sendERR(uint8_t errnum);
 void sendPOS();
+#ifndef UNO_TEST
+void sendSRV();
+#else
+void sendSRV(int32_t nr, int32_t val);
+#endif
 void sendESS();
 void sendLSS();
 void sendRES();
@@ -34,5 +39,6 @@ void roboSRV();
 void roboWAI();
 bool roboGetRefOkay(int i);
 int32_t roboGetStepperPos(int i);
+int roboGetServoPos(int i);
 bool roboGetEstop();
 bool roboGetLimitSwitch(int i);
