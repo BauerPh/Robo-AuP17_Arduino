@@ -85,12 +85,12 @@ const driveMode_t J6_MODE =         HALF_STEP;
     // -----------------------------------------------------------------------------
     // Endschalter & ESTOP
     // -----------------------------------------------------------------------------
-    #define J1_LIMIT_SWITCH_PIN     5
-    #define J2_LIMIT_SWITCH_PIN     5
-    #define J3_LIMIT_SWITCH_PIN     5
-    #define J4_LIMIT_SWITCH_PIN     5
-    #define J5_LIMIT_SWITCH_PIN     5
-    #define J6_LIMIT_SWITCH_PIN     5
+    #define J1_LIMIT_SWITCH_PIN     13
+    #define J2_LIMIT_SWITCH_PIN     12
+    #define J3_LIMIT_SWITCH_PIN     14
+    #define J4_LIMIT_SWITCH_PIN     27
+    #define J5_LIMIT_SWITCH_PIN     26
+    #define J6_LIMIT_SWITCH_PIN     25
 
     #define EMERGENCY_STOP_PIN      5
 #endif
