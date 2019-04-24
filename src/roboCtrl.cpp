@@ -84,6 +84,7 @@ void _updateLimitSwitches() {
 }
 
 void _roboInitMove(kissStepper &mot, int32_t target, uint16_t minSpeed, uint16_t speed, uint16_t acc) {
+    mot.setMinSpeed(minSpeed);
     mot.setAccel(acc);
     mot.setMaxSpeed(speed);
     mot.moveTo(target);
@@ -118,7 +119,7 @@ void roboMOV() {
             }
 
             // Daten prüfen
-            if (nr > 5 || minSpeed == 0 || speed == 0 || acc == 0 || _stopAcc[nr] == 0) {
+            if (nr > 5 || minSpeed == 0 || speed == 0 || _stopAcc[nr] == 0) {
                 sendERR(2);
                 _roboFastStop();
                 return;

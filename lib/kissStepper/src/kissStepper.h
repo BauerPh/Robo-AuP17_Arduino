@@ -43,6 +43,7 @@ public:
 	void begin(uint16_t maxStepsPerSec = 100, uint16_t accelStepsPerSecPerSec = 0);
 	void enable(void);
 	void disable(void);
+	void setMinSpeed(uint16_t stepsPerSec);
 	void setMaxSpeed(uint16_t stepsPerSec);
 	uint16_t getMaxSpeed(void)
 	{
@@ -110,6 +111,7 @@ private:
 	#endif
     int32_t pos;
     int32_t target;
+	uint16_t minSpeed;
     uint16_t maxSpeed;
     uint16_t curSpeed;
     uint8_t errorCorrection;

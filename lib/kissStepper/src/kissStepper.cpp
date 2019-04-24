@@ -11,8 +11,7 @@
 // ----------------------------------------------------------------------------------------------------
 // Initialize the motor in a default state
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::begin(uint16_t maxStepsPerSec, uint16_t accelStepsPerSecPerSec)
-{
+void kissStepper::begin(uint16_t maxStepsPerSec, uint16_t accelStepsPerSecPerSec) {
     // set pins to output
     if (pinEnable != pinNotSet) pinMode(pinEnable, OUTPUT);
     pinMode(pinDir, OUTPUT);
@@ -49,18 +48,15 @@ void kissStepper::begin(uint16_t maxStepsPerSec, uint16_t accelStepsPerSecPerSec
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::enable(void)
-{
+void kissStepper::enable(void) {
     if (pinEnable != pinNotSet) digitalWrite(pinEnable, PINVAL_ENABLED);
     enabled = true;
 }
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::disable(void)
-{
-    if (pinEnable != pinNotSet)
-    {
+void kissStepper::disable(void) {
+    if (pinEnable != pinNotSet) {
         delay(50); // this short delay stops motor momentum
         digitalWrite(pinEnable, PINVAL_DISABLED);
     }
@@ -70,8 +66,13 @@ void kissStepper::disable(void)
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::setMaxSpeed(uint16_t stepsPerSec)
-{
+void kissStepper::setMinSpeed(uint16_t stepsPerSec) {
+    minSpeed = stepsPerSec;
+}
+
+// ----------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------------------
+void kissStepper::setMaxSpeed(uint16_t stepsPerSec) {
 	if ((uint32_t(stepsPerSec) << driveMode) > maxSpeedUSteps) maxSpeed = (maxSpeedUSteps >> driveMode);
     else maxSpeed = stepsPerSec;
     // if the motor is moving and acceleration is off, change speed immediately
@@ -85,10 +86,8 @@ void kissStepper::setMaxSpeed(uint16_t stepsPerSec)
 // correctionCounter, in order to determine whether or not to apply a correction.
 // In effect, this adds 8 bits worth of "decimal places" to stepInterval.
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::setCurSpeed(uint16_t stepsPerSec)
-{
-    if (stepsPerSec > 0)
-    {				
+void kissStepper::setCurSpeed(uint16_t stepsPerSec) {
+    if (stepsPerSec > 0) {
 		uint32_t uStepsPerSec = uint32_t(stepsPerSec) << driveMode;
 		stepInterval = getStepInterval(uStepsPerSec);
 		//stepInterval = halfSecond / uStepsPerSec;
@@ -103,8 +102,7 @@ void kissStepper::setCurSpeed(uint16_t stepsPerSec)
 // ----------------------------------------------------------------------------------------------------
 // This method sets the motor acceleration in RPM/s
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::setAccel(uint16_t stepsPerSecPerSec)
-{
+void kissStepper::setAccel(uint16_t stepsPerSecPerSec) {
     // calculate the time interval at which to increment curSpeed
     // and recalculate decelDistance
     if (stepsPerSecPerSec > 0)
@@ -116,11 +114,15 @@ void kissStepper::setAccel(uint16_t stepsPerSecPerSec)
 // ----------------------------------------------------------------------------------------------------
 // This method figures out the distance required to decelerate from the current speed
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::calcDecel(void)
-{
-    if (accel != 0)
-        decelDistance = ((uint32_t)curSpeed * curSpeed * fullStepVal) / ((uint32_t)accel << 1);
-    else
+void kissStepper::calcDecel(void) {
+    if (accel != 0) {        
+        if (curSpeed < minSpeed) 
+            decelDistance = 0;
+        else    
+            // s = (v^2 - v0^2) / 2a
+            decelDistance = (((uint32_t)curSpeed * curSpeed - (uint32_t)minSpeed * minSpeed) * fullStepVal) / ((uint32_t)accel << 1);
+            //decelDistance = ((uint32_t)curSpeed * curSpeed * fullStepVal) / ((uint32_t)accel << 1);
+    } else
         decelDistance = 0;
 }
 
@@ -128,8 +130,7 @@ void kissStepper::calcDecel(void)
 // Makes the motor work. Call repeatedly and often for smooth motion.
 // Returns true if the motor is moving, otherwise false.
 // ----------------------------------------------------------------------------------------------------
-bool kissStepper::work(void)
-{
+bool kissStepper::work(void) {
 	// check if it's necessary to move the motor
     if (moveState != STOPPED)
     {
@@ -146,8 +147,7 @@ bool kissStepper::work(void)
         // curTime - lastAccelTime = 8
         // And it's all accounted for. It's like magic!
         // Adding accelInterval to lastAccelTime produces more accurate timing than setting lastAccelTime = curTime
-        if (accel)
-        {
+        if (accel) {
             accelState_t newAccelState;
             int32_t distRemaining = ((moveState == FORWARD) ? (target - pos) : (pos - target));
             if (distRemaining > decelDistance)
@@ -155,14 +155,12 @@ bool kissStepper::work(void)
             else
                 newAccelState = (curSpeed > 1) ? DECELERATING : CONSTVEL;			
 
-            if (newAccelState != CONSTVEL)
-            {
+            if (newAccelState != CONSTVEL) {
                 if (accelState != newAccelState)
                     lastAccelTime = curTime;
-                if ((curTime - lastAccelTime) >= accelInterval)
-                {
-                    setCurSpeed(curSpeed+newAccelState);
+                if ((curTime - lastAccelTime) >= accelInterval) {
                     lastAccelTime += accelInterval;
+                    setCurSpeed(curSpeed + newAccelState);                    
                     calcDecel();
                 }
             }
@@ -171,19 +169,14 @@ bool kissStepper::work(void)
 
         // Step, if it's time...
         // Adding stepInterval to lastStepTime produces more accurate timing than setting lastStepTime = curTime
-        if ((curTime - lastStepTime) >= stepInterval)
-        {
-            if (!(*stepOut & stepBit))
-            {
+        if ((curTime - lastStepTime) >= stepInterval) {
+            if (!(*stepOut & stepBit)) {
                 // check if the target is reached
                 int32_t newPos = (moveState == FORWARD) ? (pos + 1) : (pos - 1);
-                if (((moveState == FORWARD) && (newPos <= target)) || ((moveState == BACKWARD) && (newPos >= target)))
-                {
+                if (((moveState == FORWARD) && (newPos <= target)) || ((moveState == BACKWARD) && (newPos >= target))) {
                     // the target is not yet reached, so advance the position index
                     pos = newPos;
-                }
-                else
-                {
+                } else {
                     // the target is reached
                     stop();
                     return false;
@@ -208,10 +201,8 @@ bool kissStepper::work(void)
 // ----------------------------------------------------------------------------------------------------
 // This method starts the motor moving towards a target
 // ----------------------------------------------------------------------------------------------------
-bool kissStepper::moveTo(int32_t newTarget)
-{
-    if (moveState == STOPPED)
-    {
+bool kissStepper::moveTo(int32_t newTarget) {
+    if (moveState == STOPPED) {
         // enable the motor controller if necessary
         if (!enabled) enable();
 
@@ -221,13 +212,13 @@ bool kissStepper::moveTo(int32_t newTarget)
         // set moveState
         moveState = (target > pos) ? FORWARD : ((target < pos) ? BACKWARD : STOPPED);
 
-        if (moveState != STOPPED)
-        {
+        if (moveState != STOPPED) {
             // set the DIR pin
             digitalWrite(pinDir, ((moveState == FORWARD) ? PINVAL_FORWARD : PINVAL_BACKWARD));
 
             // if not accelerating, start motor at full speed
             if (!accel) setCurSpeed(maxSpeed);
+            else setCurSpeed(minSpeed);
 
 			// restart correction counter
 			correctionCounter = 0;
@@ -240,16 +231,14 @@ bool kissStepper::moveTo(int32_t newTarget)
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::decelerate(void)
-{
+void kissStepper::decelerate(void) {
     target = ((moveState == FORWARD) ? (pos + decelDistance) : (pos - decelDistance));
     target = constrain(target, reverseLimit, forwardLimit);
 }
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::stop(void)
-{
+void kissStepper::stop(void) {
     target = pos;
     curSpeed = 0;
     stepInterval = maxTimeInterval;
@@ -260,10 +249,8 @@ void kissStepper::stop(void)
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-void kissStepper::setPos(int32_t newPos)
-{
-    if (moveState == STOPPED)
-    {
+void kissStepper::setPos(int32_t newPos) {
+    if (moveState == STOPPED) {
         pos = constrain(newPos, reverseLimit, forwardLimit);
         target = pos;
     }
@@ -271,8 +258,7 @@ void kissStepper::setPos(int32_t newPos)
 
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
-uint32_t kissStepper::getStepInterval(uint32_t uStepsPerSec)
-{
+uint32_t kissStepper::getStepInterval(uint32_t uStepsPerSec) {
 	if (uStepsPerSec < 8) {
 		return accLookup32Bit[uStepsPerSec - 1];
 	} else if (uStepsPerSec < 1954) {
