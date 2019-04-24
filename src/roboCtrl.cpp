@@ -144,13 +144,14 @@ void roboREF() {
         for (uint8_t i = 0; i < MsgData.cnt; i++) {
             uint8_t nr = MsgData.parSet[i][0] - 1;
             bool dir = MsgData.parSet[i][1] == 0 ? false : true;
-            uint16_t speedFast = MsgData.parSet[i][2];
-            uint16_t speedSlow = MsgData.parSet[i][3];
-            uint16_t acc = MsgData.parSet[i][4];
-            uint16_t maxStepsBack = MsgData.parSet[i][5];
-            _stopAcc[nr] = MsgData.parSet[i][6];
+            uint16_t minSpeed = MsgData.parSet[i][2];
+            uint16_t speedFast = MsgData.parSet[i][3];
+            uint16_t speedSlow = MsgData.parSet[i][4];
+            uint16_t acc = MsgData.parSet[i][5];
+            uint16_t maxStepsBack = MsgData.parSet[i][6];
+            _stopAcc[nr] = MsgData.parSet[i][7];
             // Daten prüfen
-            if (nr > 5 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
+            if (nr > 5 || minSpeed == 0 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
                 sendERR(2);
                 return; // Referenzfahrt abbrechen
             }
@@ -172,19 +173,20 @@ void roboREF() {
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
-        uint16_t speedFast = MsgData.parSet[i][2];
-        uint16_t speedSlow = MsgData.parSet[i][3];
-        uint16_t acc = MsgData.parSet[i][4];
-        uint16_t maxStepsBack = MsgData.parSet[i][5];
-        _stopAcc[nr] = MsgData.parSet[i][6];
+        uint16_t minSpeed = MsgData.parSet[i][2];
+        uint16_t speedFast = MsgData.parSet[i][3];
+        uint16_t speedSlow = MsgData.parSet[i][4];
+        uint16_t acc = MsgData.parSet[i][5];
+        uint16_t maxStepsBack = MsgData.parSet[i][6];
+        _stopAcc[nr] = MsgData.parSet[i][7];
         // Daten prüfen
-        if (nr > 5 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
+        if (nr > 5 || minSpeed == 0 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
             _roboFastStop();
             sendERR(2);
             return; // Referenzfahrt abbrechen
         }
         // Fahrt initieren
-        _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, speedFast, acc);
+        _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, minSpeed, speedFast, acc);
     }
     sendACK(); // Telegramm bestätigen
     // Endschalter schon belegt? => dann gleich "stoppen"
@@ -212,11 +214,12 @@ void roboREF() {
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
-        uint16_t speedFast = MsgData.parSet[i][2];
-        uint16_t acc = MsgData.parSet[i][4];
-        uint16_t maxStepsBack = MsgData.parSet[i][5];
+        uint16_t minSpeed = MsgData.parSet[i][2];
+        uint16_t speedFast = MsgData.parSet[i][3];
+        uint16_t acc = MsgData.parSet[i][5];
+        uint16_t maxStepsBack = MsgData.parSet[i][6];
         // Fahrt initieren
-        _roboInitMove(_stepper[nr], !dir ? _stepper[nr].getPos() + maxStepsBack : _stepper[nr].getPos() - maxStepsBack, speedFast, acc);
+        _roboInitMove(_stepper[nr], !dir ? _stepper[nr].getPos() + maxStepsBack : _stepper[nr].getPos() - maxStepsBack, minSpeed, speedFast, acc);
     }
     // Endschalter schon frei? => dann gleich "stoppen"
     _updateLimitSwitches();
@@ -251,10 +254,11 @@ void roboREF() {
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
-        uint16_t speedSlow = MsgData.parSet[i][3];
-        uint16_t acc = MsgData.parSet[i][4];
+        uint16_t minSpeed = MsgData.parSet[i][2];
+        uint16_t speedSlow = MsgData.parSet[i][4];
+        uint16_t acc = MsgData.parSet[i][5];
         // Fahrt initieren
-        _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, speedSlow, acc);
+        _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, minSpeed, speedSlow, acc);
     }
     // Endschalter schon belegt? => dann gleich "stoppen"
     _updateLimitSwitches();
