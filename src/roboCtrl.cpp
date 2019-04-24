@@ -83,7 +83,7 @@ void _updateLimitSwitches() {
     }
 }
 
-void _roboInitMove(kissStepper &mot, int32_t target, uint16_t speed, uint16_t acc) {
+void _roboInitMove(kissStepper &mot, int32_t target, uint16_t minSpeed, uint16_t speed, uint16_t acc) {
     mot.setAccel(acc);
     mot.setMaxSpeed(speed);
     mot.moveTo(target);
@@ -105,9 +105,10 @@ void roboMOV() {
         for (uint8_t i = 0; i < MsgData.cnt; i++) {
             uint8_t nr = MsgData.parSet[i][0] - 1;
             int32_t target = MsgData.parSet[i][1];
-            uint16_t speed = MsgData.parSet[i][2];
-            uint16_t acc = MsgData.parSet[i][3];
-            _stopAcc[nr] = MsgData.parSet[i][4];
+            uint16_t minSpeed = MsgData.parSet[i][2];
+            uint16_t speed = MsgData.parSet[i][3];
+            uint16_t acc = MsgData.parSet[i][4];
+            _stopAcc[nr] = MsgData.parSet[i][5];
 
             // Referenz prüfen
             if (!_refOkay[nr]) {
@@ -117,13 +118,13 @@ void roboMOV() {
             }
 
             // Daten prüfen
-            if (nr > 5 || speed == 0 || acc == 0 || _stopAcc[nr] == 0) {
+            if (nr > 5 || minSpeed == 0 || speed == 0 || acc == 0 || _stopAcc[nr] == 0) {
                 sendERR(2);
                 _roboFastStop();
                 return;
             }
             // Fahrt initieren
-            _roboInitMove(_stepper[nr], target, speed, acc);
+            _roboInitMove(_stepper[nr], target, minSpeed, speed, acc);
         }
         sendACK(); // Telegramm bestätigen
         // Achsen verfahren
@@ -194,7 +195,10 @@ void roboREF() {
         if (_checkEstop()) return;	//bei Nothalt Referenzfahrt abbrechen
         stopRef |= _checkRoboStop();
         _updateLimitSwitches();
-        for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) _stepper[i].stop();
+        for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) {
+            _stepper[i].stop();
+            sendLSS();
+        }
     }
     if (stopRef) {
         sendERR(4);
@@ -222,7 +226,10 @@ void roboREF() {
         if (_checkEstop()) return;	//bei Nothalt Referenzfahrt abbrechen
         stopRef |= _checkRoboStop();
         _updateLimitSwitches();
-        for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].fell()) _stepper[i].decelerate();
+        for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].fell()) {
+            _stepper[i].decelerate();
+            sendLSS();
+        }
     }
     if (stopRef) {
         sendERR(4);
@@ -257,7 +264,10 @@ void roboREF() {
         if (_checkEstop()) return;	//bei Nothalt Referenzfahrt abbrechen
         stopRef |= _checkRoboStop();
         _updateLimitSwitches();
-        for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) _stepper[i].stop();
+        for (uint8_t i = 0; i < 6; i++) if (_limitswitches[i].rose()) {
+            _stepper[i].stop();
+            sendLSS();
+        }
     }
     if (stopRef) {
         sendERR(4);
@@ -271,7 +281,6 @@ void roboREF() {
         _refOkay[nr] = true;
     }
     sendPOS();
-    sendESS();
     sendFIN();
 }
 
