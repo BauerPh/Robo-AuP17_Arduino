@@ -304,7 +304,6 @@ void roboSRV() {
     } else {
         int srvPos = _servos[srvIndex].read();        
         int interval = srvPos < srvTarget ? 1 : -1;
-        Serial.println(srvDelay);
         for (int i = srvPos + interval; srvPos < srvTarget ? i <= srvTarget : i >= srvTarget; i += interval) {
             _servos[srvIndex].write(i);
             if (i != srvTarget) {
