@@ -290,15 +290,27 @@ void roboREF() {
 }
 
 void roboSRV() {
-    if (MsgData.parSet[0][0] > 3 || MsgData.parSet[0][0] < 1) {
+    if (MsgData.parSet[0][0] > 3 || MsgData.parSet[0][0] < 1 || MsgData.parSet[0][2] < 1 || MsgData.parSet[0][2] > 100) {
         sendERR(2);
         return;
     }
-    #ifndef UNO_TEST
-        _servos[MsgData.parSet[0][0] - 1].write(MsgData.parSet[0][1]);
-    #endif
     sendACK();
     #ifndef UNO_TEST
+    int srvIndex = MsgData.parSet[0][0] - 1;
+    int srvTarget = MsgData.parSet[0][1];
+    int srvDelay = 100 - MsgData.parSet[0][2];
+    if (srvDelay = 0) {
+        _servos[srvIndex].write(srvTarget);
+    } else {
+        int srvPos = _servos[srvIndex].read();
+        int start = srvPos < srvTarget ? srvPos : srvTarget;
+        int end = srvPos < srvTarget ? srvTarget : srvPos;
+        int interval = srvPos < srvTarget ? 1 : -1;
+        for (int i = start; i <= end; i += interval) {
+            _servos[srvIndex].write(i);
+            if (i != end) delay(srvDelay);
+        }
+    }
     sendSRV();
     #else
     sendSRV(MsgData.parSet[0][0], MsgData.parSet[0][1]);
