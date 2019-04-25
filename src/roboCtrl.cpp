@@ -298,17 +298,18 @@ void roboSRV() {
     #ifndef UNO_TEST
     int srvIndex = MsgData.parSet[0][0] - 1;
     int srvTarget = MsgData.parSet[0][1];
-    int srvDelay = 100 - MsgData.parSet[0][2];
-    if (srvDelay = 0) {
+    unsigned int srvDelay = trunc(-0.8F * (float)MsgData.parSet[0][2] + 100.0F);
+    if (srvDelay == 0) {
         _servos[srvIndex].write(srvTarget);
     } else {
-        int srvPos = _servos[srvIndex].read();
-        int start = srvPos < srvTarget ? srvPos : srvTarget;
-        int end = srvPos < srvTarget ? srvTarget : srvPos;
+        int srvPos = _servos[srvIndex].read();        
         int interval = srvPos < srvTarget ? 1 : -1;
-        for (int i = start; i <= end; i += interval) {
+        Serial.println(srvDelay);
+        for (int i = srvPos + interval; srvPos < srvTarget ? i <= srvTarget : i >= srvTarget; i += interval) {
             _servos[srvIndex].write(i);
-            if (i != end) delay(srvDelay);
+            if (i != srvTarget) {
+                for (unsigned int j = 1; j <= srvDelay; j++) delayMicroseconds(100);
+            }
         }
     }
     sendSRV();
