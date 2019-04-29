@@ -367,7 +367,7 @@ void roboLoop() {
         sendRES();
         sendESS();
         if (!_emergencystop.read()) for (uint8_t i = 0; i < 6; i++) _refOkay[i] = false;
-    }	
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -379,8 +379,8 @@ void roboCtrlSetup() {
         _limitswitches[i].attach(_limitswitchPins[i], INPUT_PULLUP);
         _limitswitches[i].interval(3);
     }
-    _emergencystop.attach(EMERGENCY_STOP_PIN, INPUT_PULLUP);
     // Nothalt
+    _emergencystop.attach(EMERGENCY_STOP_PIN, INPUT_PULLUP);
     _emergencystop.interval(3);
     // Schrittmotoren initialisieren
     for (uint8_t i = 0; i < 6; i++) _stepper[i].begin();
