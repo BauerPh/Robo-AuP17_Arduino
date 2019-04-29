@@ -41,6 +41,7 @@ public:
 		fullStepVal(1 << driveMode) {}
 
 	void begin(uint16_t maxStepsPerSec = 100, uint16_t accelStepsPerSecPerSec = 0);
+	void setDefaultLimits(void);
 	void enable(void);
 	void disable(void);
 	void setMinSpeed(uint16_t stepsPerSec);
