@@ -46,6 +46,11 @@ void kissStepper::begin(uint16_t maxStepsPerSec, uint16_t accelStepsPerSecPerSec
     stepOut = portOutputRegister(digitalPinToPort(pinStep));
 }
 
+void kissStepper::setDefaultLimits(void) {
+    forwardLimit = defaultForwardLimit;
+    reverseLimit = defaultReverseLimit;
+}
+
 // ----------------------------------------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------------------
 void kissStepper::enable(void) {

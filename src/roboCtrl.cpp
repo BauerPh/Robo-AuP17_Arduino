@@ -98,6 +98,21 @@ bool _roboWork() {
     return working;
 }
 
+void _setJointLimits() {
+    _stepper[0].forwardLimit = J1_POS_STEP_LIMIT;
+    _stepper[0].reverseLimit = J1_NEG_STEP_LIMIT;
+    _stepper[1].forwardLimit = J2_POS_STEP_LIMIT;
+    _stepper[1].reverseLimit = J2_NEG_STEP_LIMIT;
+    _stepper[2].forwardLimit = J3_POS_STEP_LIMIT;
+    _stepper[2].reverseLimit = J3_NEG_STEP_LIMIT;
+    _stepper[3].forwardLimit = J4_POS_STEP_LIMIT;
+    _stepper[3].reverseLimit = J4_NEG_STEP_LIMIT;
+    _stepper[4].forwardLimit = J5_POS_STEP_LIMIT;
+    _stepper[4].reverseLimit = J5_NEG_STEP_LIMIT;
+    _stepper[5].forwardLimit = J6_POS_STEP_LIMIT;
+    _stepper[5].reverseLimit = J6_NEG_STEP_LIMIT;
+}
+
 // -----------------------------------------------------------------------------
 // Public
 // -----------------------------------------------------------------------------
@@ -186,6 +201,8 @@ void roboREF() {
             sendERR(2);
             return; // Referenzfahrt abbrechen
         }
+        // Achslimit erstmal deaktivieren, damit Referenzfahrt überhaupt funktioniert
+        _stepper[nr].setDefaultLimits();
         // Fahrt initieren
         _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, minSpeed, speedFast, acc);
     }
@@ -285,6 +302,8 @@ void roboREF() {
         _stepper[nr].setPos(0);
         _refOkay[nr] = true;
     }
+    // Achslimit wieder setzen
+    _setJointLimits();
     sendPOS();
     sendFIN();
 }
@@ -384,18 +403,6 @@ void roboCtrlSetup() {
     _emergencystop.interval(3);
     // Schrittmotoren initialisieren
     for (uint8_t i = 0; i < 6; i++) _stepper[i].begin();
-    _stepper[0].forwardLimit = J1_POS_STEP_LIMIT;
-    _stepper[0].reverseLimit = J1_NEG_STEP_LIMIT;
-    _stepper[1].forwardLimit = J2_POS_STEP_LIMIT;
-    _stepper[1].reverseLimit = J2_NEG_STEP_LIMIT;
-    _stepper[2].forwardLimit = J3_POS_STEP_LIMIT;
-    _stepper[2].reverseLimit = J3_NEG_STEP_LIMIT;
-    _stepper[3].forwardLimit = J4_POS_STEP_LIMIT;
-    _stepper[3].reverseLimit = J4_NEG_STEP_LIMIT;
-    _stepper[4].forwardLimit = J5_POS_STEP_LIMIT;
-    _stepper[4].reverseLimit = J5_NEG_STEP_LIMIT;
-    _stepper[5].forwardLimit = J6_POS_STEP_LIMIT;
-    _stepper[5].reverseLimit = J6_NEG_STEP_LIMIT;
 
     // Servos initialisieren
 #ifndef UNO_TEST
