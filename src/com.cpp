@@ -83,7 +83,7 @@ void _rcvMsg() {
 
             //parse Msg
             if (!_parseMsg(Msg, MsgData)) {
-                sendERR(2);
+                sendERR(ERR_PARAMETER_ERR);
                 Msg = "";
                 return;
             }
@@ -106,7 +106,7 @@ void _rcvMsg() {
             else if (MsgData.func == "wai") roboWAI();
             //NO FUNCTION
             //***************
-            else sendERR(1);
+            else sendERR(ERR_UNKNOWN_CMD);
         } else if (MsgIn) Msg += c;
     }
 }
@@ -126,8 +126,8 @@ void sendFIN() {
     _sendNewLine();
 }
 
-void sendERR(uint8_t errnum) {
-    Serial.print(String(F("err#")) + String(errnum));
+void sendERR(errorCode_t error) {
+    Serial.print(String(F("err#")) + String(error));
     _sendNewLine();
 }
 

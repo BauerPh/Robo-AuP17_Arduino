@@ -121,7 +121,7 @@ void kissStepper::setAccel(uint16_t stepsPerSecPerSec) {
 // ----------------------------------------------------------------------------------------------------
 void kissStepper::calcDecel(void) {
     if (accel != 0) {        
-        if (curSpeed < minSpeed) 
+        if (curSpeed <= minSpeed) 
             decelDistance = 0;
         else    
             // s = (v^2 - v0^2) / 2a
@@ -142,30 +142,24 @@ bool kissStepper::work(void) {
         uint32_t curTime = micros();
 
         // Handle acceleration
-        // What happens if curTime rolls over but lastAccelTime has not?
-        // In such a situation, curTime < lastAccelTime. Wouldn't that break the timing?
-        // Let's see:
-        // curTime = 3
-        // lastAccelTime = 4294967291
-        // curTime - lastAccelTime = -4294967288
-        // But with unsigned math (as it is below), you can't get a negative result, so actually
-        // curTime - lastAccelTime = 8
-        // And it's all accounted for. It's like magic!
-        // Adding accelInterval to lastAccelTime produces more accurate timing than setting lastAccelTime = curTime
         if (accel) {
             accelState_t newAccelState;
             int32_t distRemaining = ((moveState == FORWARD) ? (target - pos) : (pos - target));
-            if (distRemaining > decelDistance)
+            // Beim bremsen 2 addieren, damit nicht laufend zwischen Beschleunigen und Bremsen gewechselt wird (durch Berechnungsungenauigkeiten)
+            if (distRemaining > (decelDistance + ((accelState == DECELERATING) ? 2 : 0)))
                 newAccelState = ((curSpeed == maxSpeed) ? CONSTVEL : ((curSpeed < maxSpeed) ? ACCELERATING : DECELERATING));
             else
-                newAccelState = (curSpeed > 1) ? DECELERATING : CONSTVEL;			
+                newAccelState = (curSpeed > minSpeed) ? DECELERATING : CONSTVEL;
 
+            if (accelState != newAccelState) {
+                Serial.print("State: ");
+                Serial.println(newAccelState);
+            }
             if (newAccelState != CONSTVEL) {
-                if (accelState != newAccelState)
-                    lastAccelTime = curTime;
+                if (accelState != newAccelState) lastAccelTime = curTime;
                 if ((curTime - lastAccelTime) >= accelInterval) {
                     lastAccelTime += accelInterval;
-                    setCurSpeed(curSpeed + newAccelState);                    
+                    setCurSpeed(curSpeed + newAccelState);
                     calcDecel();
                 }
             }
@@ -173,7 +167,6 @@ bool kissStepper::work(void) {
         }
 
         // Step, if it's time...
-        // Adding stepInterval to lastStepTime produces more accurate timing than setting lastStepTime = curTime
         if ((curTime - lastStepTime) >= stepInterval) {
             if (!(*stepOut & stepBit)) {
                 // check if the target is reached

@@ -97,9 +97,9 @@ private:
 	static const uint32_t oneSecond = 1000000UL;
 	static const uint8_t counterIncrement = 17U;
 	static const uint8_t pinNotSet = 255U;
-	static const int32_t defaultForwardLimit = 2147483647L;
-	static const int32_t defaultReverseLimit = -2147483648L;
-	static const uint32_t maxTimeInterval = 4294967295UL;	
+	static const int32_t defaultForwardLimit = 1073741823L; // max int32 / 2
+	static const int32_t defaultReverseLimit = -1073741824L; // max int32 / 2
+	static const uint32_t maxTimeInterval = 4294967295UL;
 	const driveMode_t driveMode;
     const uint8_t pinDir;
     const uint8_t pinStep;

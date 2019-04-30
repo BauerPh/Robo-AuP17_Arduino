@@ -128,14 +128,14 @@ void roboMOV() {
 
             // Referenz prüfen
             if (!_refOkay[nr]) {
-                sendERR(3);
+                sendERR(ERR_NO_REF);
                 _roboFastStop();
                 return;
             }
 
             // Daten prüfen
             if (nr > 5 || minSpeed == 0 || speed == 0 || _stopAcc[nr] == 0) {
-                sendERR(2);
+                sendERR(ERR_PARAMETER_ERR);
                 _roboFastStop();
                 return;
             }
@@ -168,7 +168,7 @@ void roboREF() {
             _stopAcc[nr] = MsgData.parSet[i][7];
             // Daten prüfen
             if (nr > 5 || minSpeed == 0 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
-                sendERR(2);
+                sendERR(ERR_PARAMETER_ERR);
                 return; // Referenzfahrt abbrechen
             }
         }
@@ -185,7 +185,9 @@ void roboREF() {
     #endif
     
     bool stopRef = false;
-    // Schnell auf Endschalter fahren
+    // ********************************************
+    // Schritt 1: Schnell auf Endschalter fahren
+    // ********************************************
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
@@ -198,12 +200,11 @@ void roboREF() {
         // Daten prüfen
         if (nr > 5 || minSpeed == 0 || speedFast == 0 || speedSlow == 0 || acc == 0 || maxStepsBack == 0 || _stopAcc[nr] == 0) {
             _roboFastStop();
-            sendERR(2);
+            sendERR(ERR_PARAMETER_ERR);
             return; // Referenzfahrt abbrechen
         }
-        // Achslimit erstmal deaktivieren, damit Referenzfahrt überhaupt funktioniert
-        _stepper[nr].setDefaultLimits();
         // Fahrt initieren
+        _stepper[nr].setPos(dir ? _stepper[nr].reverseLimit : _stepper[nr].forwardLimit);
         _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, minSpeed, speedFast, acc);
     }
     sendACK(); // Telegramm bestätigen
@@ -221,14 +222,25 @@ void roboREF() {
         }
     }
     if (stopRef) {
-        sendERR(4);
+        sendERR(ERR_REF_CANCELED);
         return; //Referenzfahrt abbrechen
+    }
+    //Wurden Endschalter wirklich erreicht?
+    for (uint8_t i = 0; i < MsgData.cnt; i++) {
+        uint8_t nr = MsgData.parSet[i][0];
+        if (!_limitswitches[nr - 1].read()) {
+            _roboFastStop();
+            sendERR(ERR_REF_FAILED_STEP1);
+            return; // Referenzfahrt abbrechen
+        }
     }
 
     // 500ms Warten
     delay(500);
 
-    // vom Endschalter runterfahren
+    // ********************************************
+    // Schritt 2: vom Endschalter runterfahren
+    // ********************************************
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
@@ -237,7 +249,8 @@ void roboREF() {
         uint16_t acc = MsgData.parSet[i][5];
         uint16_t maxStepsBack = MsgData.parSet[i][6];
         // Fahrt initieren
-        _roboInitMove(_stepper[nr], !dir ? _stepper[nr].getPos() + maxStepsBack : _stepper[nr].getPos() - maxStepsBack, minSpeed, speedFast, acc);
+        _stepper[nr].setPos(0);
+        _roboInitMove(_stepper[nr], dir ? -(int32_t)maxStepsBack : (int32_t)maxStepsBack, minSpeed, speedFast, acc);
     }
     // Endschalter schon frei? => dann gleich "stoppen"
     _updateLimitSwitches();
@@ -253,7 +266,7 @@ void roboREF() {
         }
     }
     if (stopRef) {
-        sendERR(4);
+        sendERR(ERR_REF_CANCELED);
         return; //Referenzfahrt abbrechen
     }
     //Wurden Endschalter wirklich verlassen?
@@ -261,14 +274,16 @@ void roboREF() {
         uint8_t nr = MsgData.parSet[i][0];
         if (_limitswitches[nr - 1].read()) {
             _roboFastStop();
-            sendERR(4);
+            sendERR(ERR_REF_FAILED_STEP2);
             return; // Referenzfahrt abbrechen
         }
     }
     // 250ms Warten
     delay(250);
 
-    // Langsam auf Endschalter fahren
+    // ********************************************
+    // Schritt 3: Langsam auf Endschalter fahren
+    // ******************************************** 
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         bool dir = MsgData.parSet[i][1] == 0 ? false : true;
@@ -276,6 +291,7 @@ void roboREF() {
         uint16_t speedSlow = MsgData.parSet[i][4];
         uint16_t acc = MsgData.parSet[i][5];
         // Fahrt initieren
+        _stepper[nr].setPos(dir ? _stepper[nr].reverseLimit : _stepper[nr].forwardLimit);
         _roboInitMove(_stepper[nr], dir ? _stepper[nr].forwardLimit : _stepper[nr].reverseLimit, minSpeed, speedSlow, acc);
     }
     // Endschalter schon belegt? => dann gleich "stoppen"
@@ -292,25 +308,34 @@ void roboREF() {
         }
     }
     if (stopRef) {
-        sendERR(4);
+        sendERR(ERR_REF_CANCELED);
         return; //Referenzfahrt abbrechen
     }
+    //Wurden Endschalter wirklich erreicht?
+    for (uint8_t i = 0; i < MsgData.cnt; i++) {
+        uint8_t nr = MsgData.parSet[i][0];
+        if (!_limitswitches[nr - 1].read()) {
+            _roboFastStop();
+            sendERR(ERR_REF_FAILED_STEP3);
+            return; // Referenzfahrt abbrechen
+        }
+    }
 
-    // Referenzfahrt abschließen
+    // ********************************************
+    // Schritt 4: Referenzfahrt abschließen
+    // ******************************************** 
     for (uint8_t i = 0; i < MsgData.cnt; i++) {
         uint8_t nr = MsgData.parSet[i][0] - 1;
         _stepper[nr].setPos(0);
         _refOkay[nr] = true;
     }
-    // Achslimit wieder setzen
-    _setJointLimits();
     sendPOS();
     sendFIN();
 }
 
 void roboSRV() {
     if (MsgData.parSet[0][0] > 3 || MsgData.parSet[0][0] < 1 || MsgData.parSet[0][2] < 1 || MsgData.parSet[0][2] > 100) {
-        sendERR(2);
+        sendERR(ERR_PARAMETER_ERR);
         return;
     }
     sendACK();
@@ -339,7 +364,7 @@ void roboSRV() {
 
 void roboWAI() {
     if (MsgData.parSet[0][0] <= 0) {
-        sendERR(2);
+        sendERR(ERR_PARAMETER_ERR);
         return;
     }
     sendACK();
@@ -403,6 +428,8 @@ void roboCtrlSetup() {
     _emergencystop.interval(3);
     // Schrittmotoren initialisieren
     for (uint8_t i = 0; i < 6; i++) _stepper[i].begin();
+    // Achslimits setzen
+    _setJointLimits();
 
     // Servos initialisieren
 #ifndef UNO_TEST

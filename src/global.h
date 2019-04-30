@@ -8,6 +8,16 @@
 void mainRegisterLoop(void (*callback)());
 
 // Kommunikation
+enum errorCode_t: uint8_t
+{
+    ERR_UNKNOWN_CMD = 1,
+    ERR_PARAMETER_ERR = 2,
+    ERR_NO_REF = 3,
+    ERR_REF_CANCELED = 4,
+    ERR_REF_FAILED_STEP1 = 5,
+    ERR_REF_FAILED_STEP2 = 6,
+    ERR_REF_FAILED_STEP3 = 7
+};
 struct structMsgData
 {
   String func;
@@ -19,7 +29,7 @@ void comSetup();
 void comLoop();
 void sendACK();
 void sendFIN();
-void sendERR(uint8_t errnum);
+void sendERR(errorCode_t err);
 void sendPOS();
 #ifndef UNO_TEST
 void sendSRV();
