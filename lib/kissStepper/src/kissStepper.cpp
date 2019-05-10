@@ -151,10 +151,6 @@ bool kissStepper::work(void) {
             else
                 newAccelState = (curSpeed > minSpeed) ? DECELERATING : CONSTVEL;
 
-            if (accelState != newAccelState) {
-                Serial.print("State: ");
-                Serial.println(newAccelState);
-            }
             if (newAccelState != CONSTVEL) {
                 if (accelState != newAccelState) lastAccelTime = curTime;
                 if ((curTime - lastAccelTime) >= accelInterval) {

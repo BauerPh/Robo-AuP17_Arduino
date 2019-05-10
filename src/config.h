@@ -51,18 +51,18 @@ const driveMode_t J6_MODE =         HALF_STEP;
 // -----------------------------------------------------------------------------
 // Limits
 // -----------------------------------------------------------------------------
-#define J1_POS_STEP_LIMIT           13000L
+#define J1_POS_STEP_LIMIT           13100L
 #define J1_NEG_STEP_LIMIT           0L
-#define J2_POS_STEP_LIMIT           7000L
+#define J2_POS_STEP_LIMIT           7100L
 #define J2_NEG_STEP_LIMIT           0L
 #define J3_POS_STEP_LIMIT           0L
-#define J3_NEG_STEP_LIMIT           -8000L
+#define J3_NEG_STEP_LIMIT           -8200L
 #define J4_POS_STEP_LIMIT           0L
-#define J4_NEG_STEP_LIMIT           -14500L
-#define J5_POS_STEP_LIMIT           4600L
+#define J4_NEG_STEP_LIMIT           -14600L
+#define J5_POS_STEP_LIMIT           4700L
 #define J5_NEG_STEP_LIMIT           0L
 #define J6_POS_STEP_LIMIT           0L
-#define J6_NEG_STEP_LIMIT           -7300L
+#define J6_NEG_STEP_LIMIT           -7400L
 
 
 // For testing
